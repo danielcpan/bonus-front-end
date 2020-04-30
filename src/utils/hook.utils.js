@@ -1,7 +1,11 @@
+// export const getInitalCacheState = () => ({
+
+// })
+
 export const getInitialState = () => ({
   isLoading: false,
   error: null,
-  data: null
+  data: undefined
 });
 
 export const defaultConfigRef = {
