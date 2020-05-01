@@ -8,6 +8,7 @@ const Loading = ({ containerStyles = {}, indicatorProps = {}, indicatorStyles = 
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
+        height: '100%',
         ...containerStyles
       }}
     >

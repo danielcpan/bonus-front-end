@@ -28,11 +28,11 @@ import {
 import { useStyles } from './AppContainer.styles';
 
 const AppSidebar = ({ isOpen, handleDrawerClose, classes }) => {
-  // const history = useHistory();
+  const history = useHistory();
   const listItems = [
-    { name: 'Dashboard', icon: <DashboardIcon /> },
-    { name: 'Requests', icon: <ShoppingCartIcon /> },
-    { name: 'All Projects', icon: <PeopleIcon /> },
+    { name: 'Dashboard', icon: <DashboardIcon />, url: '/' },
+    { name: 'Requests', icon: <ShoppingCartIcon />, url: '/posts' },
+    { name: 'All Projects', icon: <PeopleIcon />, url: '/comments' },
     { name: 'My Projects', icon: <BarChartIcon /> },
     { name: 'Edit Environment', icon: <EditIcon />, url: '/edit-env' }
   ];
@@ -53,8 +53,8 @@ const AppSidebar = ({ isOpen, handleDrawerClose, classes }) => {
 
       <List>
         {listItems.map(item => (
-          // <ListItem onClick={() => history.push(item.url || '/')} key={item.name} button>
-          <ListItem key={item.name} button>
+          <ListItem onClick={() => history.push(item.url || '/')} key={item.name} button>
+            {/* <ListItem key={item.name} button> */}
             <ListItemIcon>{item.icon}</ListItemIcon>
             <ListItemText primary={item.name} />
           </ListItem>
