@@ -41,6 +41,7 @@ export function useBaseQuery(queryKey, queryVariables, queryFn, config = {}) {
       try {
         // const data =  await query.fetch(rest)
         // console.log("we are inside this thing:", data)
+        console.log('refetching');
         return await query.fetch(rest);
       } catch (err) {
         if (throwOnError) {
@@ -101,7 +102,7 @@ export function useBaseQuery(queryKey, queryVariables, queryFn, config = {}) {
   return {
     ...query.state,
     config,
-    query,
+    // query,
     refetch
   };
 }

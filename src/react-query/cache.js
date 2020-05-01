@@ -24,6 +24,40 @@ const actionSuccess = {};
 const actionError = {};
 const actionSetState = {};
 
+class Cache {
+  static listeners = [];
+
+  constructor() {
+    this.entities = {};
+    this.queries = {};
+    this.isFetching = 0;
+  }
+
+  // static #notifyGlobalListeners() {
+  //   this.isFetching = Object.values(queryCache.queries).reduce(
+  //     (acc, query) => (query.state.isFetching ? acc + 1 : acc),
+  //     0
+  //   );
+  //   listeners.forEach(d => d(cache));
+  // }
+
+  subscribe(cb) {
+    Cache.listeners.push(cb);
+    return () => {
+      Cache.listeners.splice(Cache.listners.indexOf(cb), 1);
+    };
+  }
+
+  clear() {
+    this.queries = {};
+    // this.#notifyGlobalListeners();
+  }
+
+  speak() {
+    console.log('woah!');
+  }
+}
+
 export function makeQueryCache() {
   const listeners = [];
 
@@ -95,16 +129,13 @@ export function makeQueryCache() {
   };
 
   cache._buildQuery = (userQueryKey, queryVariables, queryFn, config) => {
-    // console.log('BUILDING QUERYYYY============');
     let [queryHash, queryKey] = config.queryKeySerializerFn(userQueryKey);
 
     let query = cache.queries[queryHash];
 
     if (query) {
-      console.log('===============QUERY CACHED==================;', query);
       Object.assign(query, { queryVariables, queryFn });
       Object.assign(query.config, config);
-      // return query;
     } else {
       query = makeQuery({
         queryKey,
@@ -128,7 +159,6 @@ export function makeQueryCache() {
 
       if (query.queryHash) {
         if (!isServer) {
-          // console.log('WE ARE REFRESHING CACHE');
           cache.queries[queryHash] = query;
           // const {
           //   state: { data },
@@ -385,21 +415,7 @@ export function makeQueryCache() {
             // Try to fetch
             let data = await tryFetchData(__queryFn, ...query.queryKey, ...query.queryVariables);
 
-            const {
-              config: { entity }
-            } = query;
-
-            const isList = Array.isArray(data);
-            const schemaType = isList ? [new schema.Entity(entity)] : new schema.Entity(entity);
-            const normalizedData = normalize(data, schemaType);
-            console.log('normalizedData:', normalizedData);
-
-            cache.entities[entity] = {
-              ...cache.entities[entity],
-              ...normalizedData.entities[entity]
-            };
-
-            query.setData(data, isList ? normalizedData.result : [normalizedData.result]);
+            query.setData(data);
 
             query.instances.forEach(
               instance => instance.onSuccess && instance.onSuccess(query.state.data)
@@ -411,6 +427,20 @@ export function makeQueryCache() {
 
             delete query.promise;
 
+            const {
+              config: { entity }
+            } = query;
+
+            const isList = Array.isArray(data);
+            const schemaType = isList ? [new schema.Entity(entity)] : new schema.Entity(entity);
+            const normalizedData = normalize(data, schemaType);
+
+            cache.entities[entity] = {
+              ...cache.entities[entity],
+              ...normalizedData.entities[entity]
+            };
+
+            // console.log('got the data:', data);
             return data;
           } catch (error) {
             dispatch({
@@ -439,10 +469,10 @@ export function makeQueryCache() {
 
     query.setState = updater => dispatch({ type: actionSetState, updater });
 
-    query.setData = (updater, ids) => {
-      console.log('ids:', ids);
+    query.setData = updater => {
+      console.log('updater:', updater);
       // Set data and mark it as cached
-      dispatch({ type: actionSuccess, updater, ids });
+      dispatch({ type: actionSuccess, updater });
 
       // Schedule a fresh invalidation!
       clearTimeout(query.staleTimeout);
@@ -468,7 +498,6 @@ export function defaultQueryReducer(state, action) {
         isStale: action.isStale,
         markedForGarbageCollection: false,
         data: action.initialData,
-        ids: [],
         updatedAt: action.hasInitialData ? Date.now() : 0
       };
     case actionFailed:
@@ -495,12 +524,10 @@ export function defaultQueryReducer(state, action) {
         failureCount: 0
       };
     case actionSuccess:
-      console.log('state HERE=======', state);
       return {
         ...state,
         status: statusSuccess,
         data: functionalUpdate(action.updater, state.data),
-        ids: [...action.ids],
         error: null,
         isStale: false,
         isFetching: false,

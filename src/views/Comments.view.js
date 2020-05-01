@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import AppContainer from '../components/AppContainer/AppContainer';
 import { useQuery, queryCache } from '../react-query';
+// import { useQuery, queryCache } from '../react-query-copy';
+// import { useQuery, queryCache } from 'react-query';
 import useAsync from '../react-query-2/useQuery';
 import axios from 'axios';
 import Loading from '../components/core/Loading';
@@ -16,25 +18,57 @@ const fetchComments = async () => {
   return data;
 };
 
+function roughSizeOfObject(object) {
+  var objectList = [];
+  var stack = [object];
+  var bytes = 0;
+
+  while (stack.length) {
+    var value = stack.pop();
+
+    if (typeof value === 'boolean') {
+      bytes += 4;
+    } else if (typeof value === 'string') {
+      bytes += value.length * 2;
+    } else if (typeof value === 'number') {
+      bytes += 8;
+    } else if (typeof value === 'object' && objectList.indexOf(value) === -1) {
+      objectList.push(value);
+
+      for (var i in value) {
+        stack.push(value[i]);
+      }
+    }
+  }
+  return bytes;
+}
+
 const Comments = () => {
   const [id, setId] = useState(1);
   useRenderCount('App');
 
   // const comments = useAsync(fetchComments, {}, { key: 'comments' });
   // const comment = useAsync(fetchComment, { id }, { key: 'comments' });
-  const comments = useAsync('comments', fetchComments, { key: 'comments' });
-  const comment = useAsync(['comment', id], fetchComment, { key: 'comments' });
-  // const comment = useAsync(fetchComment, { id }, { key: 'comments' });
+  // const comments = useAsync('comments', fetchComments, { key: 'comments' });
+  // const comment = useAsync(['comment', id], fetchComment, { key: 'comments' });
+  // const comments = useQuery('comments', fetchComments, { entity: 'comments', staleTime: 5000 });
+  // const comment = useQuery(['comment', id], fetchComment, { entity: 'comments', staleTime: 50000 });
 
-  // console.log('USE_QUERY', comments);
+  const comments = useQuery('comments', fetchComments, { entity: 'comments' });
+  const comment = useQuery(['comment', id], fetchComment, { entity: 'comments' });
+  // const comment = { status: 'success', error: null, data: {} };
+
+  console.log('USE_QUERY', comments);
   // console.log('USE_ASYNC', comments);
-  console.log('USE_ASYNC', comments);
-  // console.log('queryCache:', queryCache);
+  // console.log('USE_ASYNC', comments);
+  console.log('queryCache:', queryCache, 'size:', roughSizeOfObject(queryCache));
 
   return (
     <AppContainer
       render={() => {
-        if (comments.isLoading || comment.isLoading) return <Loading />;
+        // if (comments.isLoading || comment.isLoading) return <Loading />;
+        const isLoading = comments.status === 'loading' || comment.status === 'loading';
+        if (isLoading) return <Loading />;
 
         if (!comments.data) return <div>No Data!</div>;
 
