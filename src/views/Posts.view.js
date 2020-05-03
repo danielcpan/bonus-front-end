@@ -37,8 +37,11 @@ const Posts = () => {
   // const posts = useAsync(fetchPosts, {}, { key: 'posts' });
   // const post = useAsync(fetchPost, { id }, { key: 'posts' });
 
-  const posts = useAsync('posts', fetchPosts, { key: 'posts' });
-  const post = useAsync(['post', id], fetchPost, { key: 'posts' });
+  // const posts = useAsync('posts', fetchPosts, { key: 'posts' });
+  // const post = useAsync(['post', id], fetchPost, { key: 'posts' });
+
+  const posts = useQuery('posts', fetchPosts);
+  const post = useQuery(['posts', id], fetchPost);
 
   // console.log('USE_QUERY', posts);
   // console.log('USE_ASYNC', posts);

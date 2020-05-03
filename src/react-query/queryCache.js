@@ -101,7 +101,7 @@ export function makeQueryCache() {
     let query = cache.queries[queryHash];
 
     if (query) {
-      console.log('===============QUERY CACHED==================;', query);
+      // console.log('===============QUERY CACHED==================;', query);
       Object.assign(query, { queryVariables, queryFn });
       Object.assign(query.config, config);
       // return query;
@@ -385,14 +385,16 @@ export function makeQueryCache() {
             // Try to fetch
             let data = await tryFetchData(__queryFn, ...query.queryKey, ...query.queryVariables);
 
-            const {
-              config: { entity }
-            } = query;
+            // const {
+            //   config: { entity }
+            // } = query;
+
+            const entity = query.queryKey[0];
 
             const isList = Array.isArray(data);
             const schemaType = isList ? [new schema.Entity(entity)] : new schema.Entity(entity);
             const normalizedData = normalize(data, schemaType);
-            console.log('normalizedData:', normalizedData);
+            // console.log('normalizedData:', normalizedData);
 
             cache.entities[entity] = {
               ...cache.entities[entity],
@@ -440,7 +442,7 @@ export function makeQueryCache() {
     query.setState = updater => dispatch({ type: actionSetState, updater });
 
     query.setData = (updater, ids) => {
-      console.log('ids:', ids);
+      // console.log('ids:', ids);
       // Set data and mark it as cached
       dispatch({ type: actionSuccess, updater, ids });
 
@@ -495,7 +497,6 @@ export function defaultQueryReducer(state, action) {
         failureCount: 0
       };
     case actionSuccess:
-      console.log('state HERE=======', state);
       return {
         ...state,
         status: statusSuccess,

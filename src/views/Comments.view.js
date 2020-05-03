@@ -45,7 +45,7 @@ function roughSizeOfObject(object) {
 
 const Comments = () => {
   const [id, setId] = useState(1);
-  useRenderCount('App');
+  // useRenderCount('App');
 
   // const comments = useAsync(fetchComments, {}, { key: 'comments' });
   // const comment = useAsync(fetchComment, { id }, { key: 'comments' });
@@ -54,14 +54,21 @@ const Comments = () => {
   // const comments = useQuery('comments', fetchComments, { entity: 'comments', staleTime: 5000 });
   // const comment = useQuery(['comment', id], fetchComment, { entity: 'comments', staleTime: 50000 });
 
-  const comments = useQuery('comments', fetchComments, { entity: 'comments' });
-  const comment = useQuery(['comment', id], fetchComment, { entity: 'comments' });
+  const comments = useQuery('comments', fetchComments);
+  const comment = useQuery(['comments', id], fetchComment, {
+    initialData: () => {
+      console.log('queryCache:', queryCache.queries, 'size:', roughSizeOfObject(queryCache));
+      const cachedCommnet = queryCache.entities['comments'][id];
+      console.log('cachedComment:', cachedCommnet);
+      return cachedCommnet;
+    }
+  });
   // const comment = { status: 'success', error: null, data: {} };
 
-  console.log('USE_QUERY', comments);
+  // console.log('USE_QUERY', comments);
   // console.log('USE_ASYNC', comments);
   // console.log('USE_ASYNC', comments);
-  console.log('queryCache:', queryCache, 'size:', roughSizeOfObject(queryCache));
+  // console.log('queryCache:', queryCache, 'size:', roughSizeOfObject(queryCache));
 
   return (
     <AppContainer

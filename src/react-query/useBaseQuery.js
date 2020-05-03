@@ -4,7 +4,14 @@ import React from 'react';
 
 import { queryCache } from './queryCache';
 import { useConfigContext } from './config';
-import { useUid, isDocumentVisible, Console, useGetLatest, useMountedCallback } from './utils';
+import {
+  useUid,
+  isDocumentVisible,
+  Console,
+  useGetLatest,
+  useMountedCallback,
+  getReturnState
+} from './utils';
 
 export function useBaseQuery(queryKey, queryVariables, queryFn, config = {}) {
   const instanceId = useUid();
@@ -41,7 +48,7 @@ export function useBaseQuery(queryKey, queryVariables, queryFn, config = {}) {
       try {
         // const data =  await query.fetch(rest)
         // console.log("we are inside this thing:", data)
-        console.log('refetching');
+        // console.log('refetching');
         return await query.fetch(rest);
       } catch (err) {
         if (throwOnError) {
@@ -99,10 +106,11 @@ export function useBaseQuery(queryKey, queryVariables, queryFn, config = {}) {
     }
   }, [config.refetchInterval, config.refetchIntervalInBackground, query.refetchInterval, refetch]);
 
-  return {
-    ...query.state,
-    config,
-    // query,
-    refetch
-  };
+  // return {
+  //   ...query.state,
+  //   config,
+  //   // query,
+  //   refetch
+  // };
+  return getReturnState({ ...query.state, config, refetch });
 }
