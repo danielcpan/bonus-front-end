@@ -54,14 +54,18 @@ const Comments = () => {
   // const comments = useQuery('comments', fetchComments, { entity: 'comments', staleTime: 5000 });
   // const comment = useQuery(['comment', id], fetchComment, { entity: 'comments', staleTime: 50000 });
 
-  const comments = useQuery('comments', fetchComments);
+  // const test = useQuery({ key: ['comments'], fn: fetchComments, config: { staleTime: 10000 } });
+  // const test = useQuery(['comments'], fetchComments, { staleTime: 10000, skip: });
+
+  const comments = useQuery('comments', fetchComments, { staleTime: 10000 });
   const comment = useQuery(['comments', id], fetchComment, {
     initialData: () => {
-      console.log('queryCache:', queryCache.queries, 'size:', roughSizeOfObject(queryCache));
+      console.log('queryCache:', queryCache, 'size:', roughSizeOfObject(queryCache));
       const cachedCommnet = queryCache.entities['comments'][id];
       console.log('cachedComment:', cachedCommnet);
       return cachedCommnet;
-    }
+    },
+    staleTime: 10000
   });
   // const comment = { status: 'success', error: null, data: {} };
 

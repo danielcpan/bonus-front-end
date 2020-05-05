@@ -24,52 +24,18 @@ const actionSuccess = {};
 const actionError = {};
 const actionSetState = {};
 
-class Cache {
-  static listeners = [];
-
-  constructor() {
-    this.entities = {};
-    this.queries = {};
-    this.isFetching = 0;
-  }
-
-  // static #notifyGlobalListeners() {
-  //   this.isFetching = Object.values(queryCache.queries).reduce(
-  //     (acc, query) => (query.state.isFetching ? acc + 1 : acc),
-  //     0
-  //   );
-  //   listeners.forEach(d => d(cache));
-  // }
-
-  subscribe(cb) {
-    Cache.listeners.push(cb);
-    return () => {
-      Cache.listeners.splice(Cache.listners.indexOf(cb), 1);
-    };
-  }
-
-  clear() {
-    this.queries = {};
-    // this.#notifyGlobalListeners();
-  }
-
-  speak() {
-    console.log('woah!');
-  }
-}
-
 export function makeQueryCache() {
   const listeners = [];
 
   const cache = {
     entities: {},
     queries: {},
-    isFetching: 0
+    isLoading: 0
   };
 
   const notifyGlobalListeners = () => {
-    cache.isFetching = Object.values(queryCache.queries).reduce(
-      (acc, query) => (query.state.isFetching ? acc + 1 : acc),
+    cache.isLoading = Object.values(queryCache.queries).reduce(
+      (acc, query) => (query.state.isLoading ? acc + 1 : acc),
       0
     );
     listeners.forEach(d => d(cache));
@@ -470,7 +436,6 @@ export function makeQueryCache() {
     query.setState = updater => dispatch({ type: actionSetState, updater });
 
     query.setData = updater => {
-      console.log('updater:', updater);
       // Set data and mark it as cached
       dispatch({ type: actionSuccess, updater });
 
@@ -491,7 +456,7 @@ export function defaultQueryReducer(state, action) {
       return {
         status: action.initialStatus,
         error: null,
-        isFetching:
+        isLoading:
           action.hasInitialData || action.manual ? false : action.initialStatus === 'loading',
         canFetchMore: false,
         failureCount: 0,
@@ -520,7 +485,7 @@ export function defaultQueryReducer(state, action) {
       return {
         ...state,
         status: state.status === statusError ? statusLoading : state.status,
-        isFetching: true,
+        isLoading: true,
         failureCount: 0
       };
     case actionSuccess:
@@ -530,7 +495,7 @@ export function defaultQueryReducer(state, action) {
         data: functionalUpdate(action.updater, state.data),
         error: null,
         isStale: false,
-        isFetching: false,
+        isLoading: false,
         canFetchMore: action.canFetchMore,
         updatedAt: Date.now(),
         failureCount: 0
@@ -538,7 +503,7 @@ export function defaultQueryReducer(state, action) {
     case actionError:
       return {
         ...state,
-        isFetching: false,
+        isLoading: false,
         isStale: true,
         ...(!action.cancelled && {
           status: statusError,

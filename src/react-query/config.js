@@ -1,7 +1,7 @@
-import React from 'react'
-import { noop, stableStringify, identity } from './utils'
+import React from 'react';
+import { noop, stableStringify, identity } from './utils';
 
-export const configContext = React.createContext()
+export const configContext = React.createContext();
 
 export const defaultConfigRef = {
   current: {
@@ -20,61 +20,53 @@ export const defaultConfigRef = {
     onSuccess: noop,
     onError: noop,
     onSettled: noop,
-    refetchOnMount: true,
-  },
-}
+    refetchOnMount: true
+  }
+};
 
 export function useConfigContext() {
-  return React.useContext(configContext) || defaultConfigRef.current
+  return React.useContext(configContext) || defaultConfigRef.current;
 }
 
 export function ReactQueryConfigProvider({ config, children }) {
-  let configContextValue = React.useContext(configContext)
+  let configContextValue = React.useContext(configContext);
 
   const newConfig = React.useMemo(() => {
     const newConfig = {
       ...(configContextValue || defaultConfigRef.current),
-      ...config,
-    }
+      ...config
+    };
 
     // Default useErrorBoundary to the suspense value
     if (typeof newConfig.useErrorBoundary === 'undefined') {
-      newConfig.useErrorBoundary = newConfig.suspense
+      newConfig.useErrorBoundary = newConfig.suspense;
     }
 
-    return newConfig
-  }, [config, configContextValue])
+    return newConfig;
+  }, [config, configContextValue]);
 
   if (!configContextValue) {
-    defaultConfigRef.current = newConfig
+    defaultConfigRef.current = newConfig;
   }
 
-  return (
-    <configContext.Provider value={newConfig}>
-      {children}
-    </configContext.Provider>
-  )
+  return <configContext.Provider value={newConfig}>{children}</configContext.Provider>;
 }
 
 export function defaultQueryKeySerializerFn(queryKey) {
-  if (!queryKey) {
-    return []
-  }
+  if (!queryKey) return [];
 
   if (typeof queryKey === 'function') {
     try {
-      return defaultQueryKeySerializerFn(queryKey())
+      return defaultQueryKeySerializerFn(queryKey());
     } catch {
-      return []
+      return [];
     }
   }
 
-  if (typeof queryKey === 'string') {
-    queryKey = [queryKey]
-  }
+  if (typeof queryKey === 'string') queryKey = [queryKey];
 
-  const queryHash = stableStringify(queryKey)
-  queryKey = JSON.parse(queryHash)
+  const queryHash = stableStringify(queryKey);
+  queryKey = JSON.parse(queryHash);
 
-  return [queryHash, queryKey]
+  return [queryHash, queryKey];
 }
