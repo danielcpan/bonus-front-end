@@ -48,7 +48,7 @@ function roughSizeOfObject(object) {
 
 const Comments = () => {
   const [id, setId] = useState(1);
-  useRenderCount('App');
+  // useRenderCount('App');
 
   // const comments = useAsync(fetchComments, {}, { key: 'comments' });
   // const comment = useAsync(fetchComment, { id }, { key: 'comments' });
@@ -59,8 +59,8 @@ const Comments = () => {
 
   // const test = useQuery({ key: ['comments'], fn: fetchComments, config: { staleTime: 10000 } });
   // const test = useQuery(['comments'], fetchComments, { staleTime: 10000, skip: });
-
-  const comments = useQuery('comments', fetchComments, {});
+  let user;
+  const comments = useQuery('comments', fetchComments, { skip: () => user.data.id });
   // console.log('comments:', comments);
   // console.log('cache:', queryCache);
   // const comment = useQuery(['comments', id], fetchComment, {

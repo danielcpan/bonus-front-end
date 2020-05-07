@@ -1,32 +1,26 @@
-import {
-  functionalUpdate,
-  cancelledError,
-  isDocumentVisible,
-  noop,
-} from './utils'
-import { queryCache, notifyGlobalListeners } from './queryCache'
+import { functionalUpdate, cancelledError, isDocumentVisible, noop } from './utils';
+import { queryCache, notifyGlobalListeners } from './queryCache';
 
-import { STATUS, QUERY } from './types'
-import defaultQueryReducer from './defaultQueryReducer'
+import { STATUS, QUERY } from './types';
+import defaultQueryReducer from './defaultQueryReducer';
 
 export function makeQuery(options) {
-  const reducer = options.config.queryReducer || defaultQueryReducer
+  const reducer = options.config.queryReducer || defaultQueryReducer;
 
-  const noQueryHash = typeof options.queryHash === 'undefined'
+  const noQueryHash = typeof options.queryHash === 'undefined';
 
   const initialData =
     typeof options.config.initialData === 'function'
       ? options.config.initialData()
-      : options.config.initialData
+      : options.config.initialData;
 
-  const hasInitialData = typeof initialData !== 'undefined'
+  const hasInitialData = typeof initialData !== 'undefined';
 
-  const isStale = noQueryHash ? true : !hasInitialData
+  const isStale = noQueryHash ? true : !hasInitialData;
 
-  const manual = options.config.manual
+  const manual = options.config.manual;
 
-  const initialStatus =
-    noQueryHash || manual || hasInitialData ? STATUS.SUCCESS : STATUS.LOADING
+  const initialStatus = noQueryHash || manual || hasInitialData ? STATUS.SUCCESS : STATUS.LOADING;
 
   const query = {
     ...options,
@@ -37,104 +31,102 @@ export function makeQuery(options) {
       initialData,
       hasInitialData,
       isStale,
-      manual,
-    }),
-  }
+      manual
+    })
+  };
 
   const dispatch = action => {
-    query.state = reducer(query.state, action)
-    query.instances.forEach(d => d.onStateUpdate(query.state))
-    notifyGlobalListeners()
-  }
+    query.state = reducer(query.state, action);
+    query.instances.forEach(d => d.onStateUpdate(query.state));
+    notifyGlobalListeners();
+  };
 
   query.scheduleStaleTimeout = () => {
-    if (query.config.staleTime === Infinity) return
+    if (query.config.staleTime === Infinity) return;
 
     query.staleTimeout = setTimeout(() => {
       if (queryCache.getQuery(query.queryKey)) {
-        dispatch({ type: QUERY.STALE })
+        dispatch({ type: QUERY.STALE });
       }
-    }, query.config.staleTime)
-  }
+    }, query.config.staleTime);
+  };
 
   query.scheduleGarbageCollection = () => {
-    if (query.config.cacheTime === Infinity) return
+    if (query.config.cacheTime === Infinity) return;
 
-    dispatch({ type: QUERY.EXPIRED })
+    dispatch({ type: QUERY.EXPIRED });
 
     query.cacheTimeout = setTimeout(
       () => {
         queryCache.removeQueries(
-          d =>
-            d.state.markedForGarbageCollection &&
-            d.queryHash === query.queryHash
-        )
+          d => d.state.markedForGarbageCollection && d.queryHash === query.queryHash
+        );
       },
       typeof query.state.data === 'undefined' && query.state.status !== 'error'
         ? 0
         : query.config.cacheTime
-    )
-  }
+    );
+  };
 
   query.heal = () => {
     // Stop the query from being garbage collected
-    clearTimeout(query.cacheTimeout)
+    clearTimeout(query.cacheTimeout);
 
     // Mark the query as not cancelled
-    query.cancelled = null
-  }
+    query.cancelled = null;
+  };
 
   query.subscribe = instance => {
-    let found = query.instances.find(d => d.id === instance.id)
+    let found = query.instances.find(d => d.id === instance.id);
 
     if (found) {
-      Object.assign(found, instance)
+      Object.assign(found, instance);
     } else {
       found = {
         onStateUpdate: noop,
-        ...instance,
-      }
-      query.instances.push(instance)
+        ...instance
+      };
+      query.instances.push(instance);
     }
 
-    query.heal()
+    query.heal();
 
     // Return the unsubscribe function
     return () => {
-      query.instances = query.instances.filter(d => d.id !== instance.id)
+      query.instances = query.instances.filter(d => d.id !== instance.id);
 
       if (!query.instances.length) {
         // Cancel any side-effects
-        query.cancelled = cancelledError
+        query.cancelled = cancelledError;
 
-        if (query.cancelQueries) query.cancelQueries()
+        if (query.cancelQueries) query.cancelQueries();
 
         // Schedule garbage collection
-        query.scheduleGarbageCollection()
+        query.scheduleGarbageCollection();
       }
-    }
-  }
+    };
+  };
 
   // Set up the fetch function
   const tryFetchData = async (queryFn, ...args) => {
     try {
       // Perform the query
-      const promise = queryFn(...query.config.queryFnParamsFilter(args))
+      const promise = queryFn(...query.config.queryFnParamsFilter(args));
 
-      query.cancelQueries = () => promise.cancel?.()
+      query.cancelQueries = () => promise.cancel?.();
 
-      const data = await promise
+      const data = await promise;
 
-      delete query.cancelQueries
-      if (query.cancelled) throw query.cancelled
+      delete query.cancelQueries;
+      if (query.cancelled) throw query.cancelled;
 
-      return data
+      return data;
     } catch (error) {
-      delete query.cancelQueries
-      if (query.cancelled) throw query.cancelled
+      delete query.cancelQueries;
+      if (query.cancelled) throw query.cancelled;
 
       // If we fail, increase the failureCount
-      dispatch({ type: QUERY.FAILURE })
+      dispatch({ type: QUERY.FAILURE });
 
       // Do we need to retry the request?
       if (
@@ -146,115 +138,117 @@ export function makeQuery(options) {
         // Only retry if the document is visible
         if (!isDocumentVisible()) {
           // set this flag to continue fetch retries on focus
-          query.shouldContinueRetryOnFocus = true
-          return new Promise(noop)
+          query.shouldContinueRetryOnFocus = true;
+          return new Promise(noop);
         }
 
-        delete query.shouldContinueRetryOnFocus
+        delete query.shouldContinueRetryOnFocus;
 
         // Determine the retryDelay
-        const delay = functionalUpdate(
-          query.config.retryDelay,
-          query.state.failureCount
-        )
+        const delay = functionalUpdate(query.config.retryDelay, query.state.failureCount);
 
         // Return a new promise with the retry
         return await new Promise((resolve, reject) => {
           // Keep track of the retry timeout
           setTimeout(async () => {
-            if (query.cancelled) return reject(query.cancelled)
+            if (query.cancelled) return reject(query.cancelled);
 
             try {
-              const data = await tryFetchData(queryFn, ...args)
-              if (query.cancelled) return reject(query.cancelled)
-              resolve(data)
+              const data = await tryFetchData(queryFn, ...args);
+              if (query.cancelled) return reject(query.cancelled);
+              resolve(data);
             } catch (error) {
-              if (query.cancelled) return reject(query.cancelled)
-              reject(error)
+              if (query.cancelled) return reject(query.cancelled);
+              reject(error);
             }
-          }, delay)
-        })
+          }, delay);
+        });
       }
 
-      throw error
+      throw error;
     }
-  }
+  };
 
-  query.fetch = async ({ force, __queryFn = query.queryFn } = {}) => {
+  const shouldSkip = skip => {
+    if (typeof skip === 'function') {
+      try {
+        return Boolean(skip());
+      } catch (err) {
+        return false;
+      }
+    }
+    return skip;
+  };
+
+  query.fetch = async ({ skip, force, __queryFn = query.queryFn } = {}) => {
     // Don't refetch fresh queries that don't have a queryHash
+    console.log('skip:', skip);
+    const isSkip = shouldSkip(skip);
+    console.log('isSkip:', isSkip);
 
-    if (!query.queryHash || (!query.state.isStale && !force)) return
+    if (!query.queryHash || (!query.state.isStale && !force)) return;
 
     // Create a new promise for the query cache if necessary
     if (!query.promise) {
       query.promise = (async () => {
         // If there are any retries pending for this query, kill them
-        query.cancelled = null
+        query.cancelled = null;
 
         try {
           // Set up the query refreshing state
-          dispatch({ type: QUERY.FETCH })
+          dispatch({ type: QUERY.FETCH });
 
           // Try to fetch
-          let data = await tryFetchData(
-            __queryFn,
-            ...query.queryKey,
-            ...query.queryVariables
-          )
+          let data = await tryFetchData(__queryFn, ...query.queryKey, ...query.queryVariables);
 
-          query.setData(data)
+          query.setData(data);
 
           query.instances.forEach(
-            instance =>
-              instance.onSuccess && instance.onSuccess(query.state.data)
-          )
+            instance => instance.onSuccess && instance.onSuccess(query.state.data)
+          );
 
           query.instances.forEach(
-            instance =>
-              instance.onSettled && instance.onSettled(query.state.data, null)
-          )
+            instance => instance.onSettled && instance.onSettled(query.state.data, null)
+          );
 
-          delete query.promise
+          delete query.promise;
 
-          return data
+          return data;
         } catch (error) {
           dispatch({
             type: QUERY.ERROR,
             cancelled: error === query.cancelled,
-            error,
-          })
+            error
+          });
 
-          delete query.promise
+          delete query.promise;
 
           if (error !== query.cancelled) {
-            query.instances.forEach(
-              instance => instance.onError && instance.onError(error)
-            )
+            query.instances.forEach(instance => instance.onError && instance.onError(error));
 
             query.instances.forEach(
-              instance =>
-                instance.onSettled && instance.onSettled(undefined, error)
-            )
+              instance => instance.onSettled && instance.onSettled(undefined, error)
+            );
 
-            throw error
+            throw error;
           }
         }
-      })()
+      })();
     }
 
-    return query.promise
-  }
+    return query.promise;
+  };
 
-  query.setState = updater => dispatch({ type: QUERY.SET_STATE, updater })
+  query.setState = updater => dispatch({ type: QUERY.SET_STATE, updater });
 
   query.setData = updater => {
     // Set data and mark it as cached
-    dispatch({ type: QUERY.SUCCESS, updater })
+    dispatch({ type: QUERY.SUCCESS, updater });
 
     // Schedule a fresh invalidation!
-    clearTimeout(query.staleTimeout)
-    query.scheduleStaleTimeout()
-  }
+    clearTimeout(query.staleTimeout);
+    query.scheduleStaleTimeout();
+  };
 
-  return query
+  return query;
 }

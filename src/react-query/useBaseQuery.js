@@ -39,6 +39,7 @@ export function useBaseQuery(queryKey, queryVariables, queryFn, config = {}) {
   const refetch = React.useCallback(
     async ({ throwOnError, ...rest } = {}) => {
       try {
+        console.log('rest:', rest);
         return await query.fetch(rest);
       } catch (err) {
         if (throwOnError) {
@@ -67,7 +68,7 @@ export function useBaseQuery(queryKey, queryVariables, queryFn, config = {}) {
       query.state.isStale && // Only refetch if stale
       (getLatestConfig().refetchOnMount || query.instances.length === 1)
     ) {
-      refetch().catch(Console.error);
+      refetch({ skip: getLatestConfig().skip }).catch(Console.error);
     }
 
     query.wasPrefetched = false;

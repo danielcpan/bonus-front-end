@@ -19,6 +19,7 @@ const queryConfig = {
   refetchAllOnWindowFocusTimeDelay: 1000 * 10,
   refetchAllOnWindowFocus: true,
   // queryKeySerializerFn: queryKey => [queryHash, queryFnArgs],
+  skip: false,
   onMutate: () => {},
   onSuccess: () => {},
   onError: () => {},
