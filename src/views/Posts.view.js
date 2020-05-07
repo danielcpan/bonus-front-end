@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import AppContainer from '../components/AppContainer/AppContainer';
 import { useQuery, queryCache } from '../react-query';
 import { schema, normalize } from 'normalizr';
-import useAsync from '../react-query-2/useQuery';
+
 import axios from 'axios';
 import Loading from '../components/core/Loading';
 import useRenderCount from '../hooks/useRenderCount';

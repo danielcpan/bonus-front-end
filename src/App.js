@@ -16,6 +16,7 @@ const queryConfig = {
   suspense: false,
   useErrorBoundary: undefined, // Defaults to the value of `suspense` if not defined otherwise
   throwOnError: false,
+  refetchAllOnWindowFocusTimeDelay: 1000 * 10,
   refetchAllOnWindowFocus: true,
   // queryKeySerializerFn: queryKey => [queryHash, queryFnArgs],
   onMutate: () => {},

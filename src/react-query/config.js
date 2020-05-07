@@ -16,6 +16,7 @@ export const defaultConfigRef = {
     queryFnParamsFilter: identity,
     throwOnError: false,
     useErrorBoundary: undefined, // this will default to the suspense value
+    skip: false,
     onMutate: noop,
     onSuccess: noop,
     onError: noop,
@@ -53,7 +54,9 @@ export function ReactQueryConfigProvider({ config, children }) {
 }
 
 export function defaultQueryKeySerializerFn(queryKey) {
-  if (!queryKey) return [];
+  if (!queryKey) {
+    return [];
+  }
 
   if (typeof queryKey === 'function') {
     try {
@@ -63,7 +66,9 @@ export function defaultQueryKeySerializerFn(queryKey) {
     }
   }
 
-  if (typeof queryKey === 'string') queryKey = [queryKey];
+  if (typeof queryKey === 'string') {
+    queryKey = [queryKey];
+  }
 
   const queryHash = stableStringify(queryKey);
   queryKey = JSON.parse(queryHash);

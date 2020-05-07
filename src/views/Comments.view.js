@@ -3,10 +3,13 @@ import AppContainer from '../components/AppContainer/AppContainer';
 import { useQuery, queryCache } from '../react-query';
 // import { useQuery, queryCache } from '../react-query-copy';
 // import { useQuery, queryCache } from 'react-query';
-import useAsync from '../react-query-2/useQuery';
+// import useAsync from '../react-query-2/useQuery';
 import axios from 'axios';
 import Loading from '../components/core/Loading';
 import useRenderCount from '../hooks/useRenderCount';
+// import { useQuery } from '../react-query-2/useQuery';
+// import { useQuery, queryCache } from '../../../../react-query';
+// import { cache } from '../react-query-2/cache';
 
 const fetchComment = async (key, id) => {
   const { data } = await axios.get(`https://jsonplaceholder.typicode.com/comments/${id}`);
@@ -45,7 +48,7 @@ function roughSizeOfObject(object) {
 
 const Comments = () => {
   const [id, setId] = useState(1);
-  // useRenderCount('App');
+  useRenderCount('App');
 
   // const comments = useAsync(fetchComments, {}, { key: 'comments' });
   // const comment = useAsync(fetchComment, { id }, { key: 'comments' });
@@ -57,17 +60,19 @@ const Comments = () => {
   // const test = useQuery({ key: ['comments'], fn: fetchComments, config: { staleTime: 10000 } });
   // const test = useQuery(['comments'], fetchComments, { staleTime: 10000, skip: });
 
-  const comments = useQuery('comments', fetchComments, { staleTime: 10000 });
-  const comment = useQuery(['comments', id], fetchComment, {
-    initialData: () => {
-      console.log('queryCache:', queryCache, 'size:', roughSizeOfObject(queryCache));
-      const cachedCommnet = queryCache.entities['comments'][id];
-      console.log('cachedComment:', cachedCommnet);
-      return cachedCommnet;
-    },
-    staleTime: 10000
-  });
-  // const comment = { status: 'success', error: null, data: {} };
+  const comments = useQuery('comments', fetchComments, {});
+  // console.log('comments:', comments);
+  // console.log('cache:', queryCache);
+  // const comment = useQuery(['comments', id], fetchComment, {
+  //   // initialData: () => {
+  //   //   console.log('queryCache:', queryCache, 'size:', roughSizeOfObject(queryCache));
+  //   //   const cachedCommnet = queryCache.entities['comments'][id];
+  //   //   console.log('cachedComment:', cachedCommnet);
+  //   //   return cachedCommnet;
+  //   // },
+  //   staleTime: 10000
+  // });
+  const comment = { status: 'success', error: null, data: {} };
 
   // console.log('USE_QUERY', comments);
   // console.log('USE_ASYNC', comments);

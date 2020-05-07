@@ -1,44 +1,38 @@
-import React from 'react';
+import React from 'react'
+import { STATUS } from './types'
 
-//
-
-export const statusIdle = 'idle';
-export const statusLoading = 'loading';
-export const statusError = 'error';
-export const statusSuccess = 'success';
-
-let _uid = 0;
-export const uid = () => _uid++;
-export const cancelledError = {};
-export let globalStateListeners = [];
-export const isServer = typeof window === 'undefined';
-export const noop = () => {};
-export const identity = d => d;
-export let Console = console || { error: noop, warn: noop, log: noop };
+let _uid = 0
+export const uid = () => _uid++
+export const cancelledError = {}
+export let globalStateListeners = []
+export const isServer = typeof window === 'undefined'
+export const noop = () => {}
+export const identity = d => d
+export let Console = console || { error: noop, warn: noop, log: noop }
 
 export function useUid() {
-  const ref = React.useRef(null);
+  const ref = React.useRef(null)
 
   if (ref.current === null) {
-    ref.current = uid();
+    ref.current = uid()
   }
 
-  return ref.current;
+  return ref.current
 }
 
 export function setConsole(c) {
-  Console = c;
+  Console = c
 }
 
 export function useGetLatest(obj) {
-  const ref = React.useRef();
-  ref.current = obj;
+  const ref = React.useRef()
+  ref.current = obj
 
-  return React.useCallback(() => ref.current, []);
+  return React.useCallback(() => ref.current, [])
 }
 
 export function functionalUpdate(updater, old) {
-  return typeof updater === 'function' ? updater(old) : updater;
+  return typeof updater === 'function' ? updater(old) : updater
 }
 
 export function stableStringifyReplacer(_, value) {
@@ -48,30 +42,30 @@ export function stableStringifyReplacer(_, value) {
         ...Object.keys(value)
           .sort()
           .map(key => ({
-            [key]: value[key]
+            [key]: value[key],
           }))
       )
-    : value;
+    : value
 }
 
 export function stableStringify(obj) {
-  return JSON.stringify(obj, stableStringifyReplacer);
+  return JSON.stringify(obj, stableStringifyReplacer)
 }
 
 export function isObject(a) {
-  return a && typeof a === 'object' && !Array.isArray(a);
+  return a && typeof a === 'object' && !Array.isArray(a)
 }
 
 export function deepIncludes(a, b) {
   if (typeof a !== typeof b) {
-    return false;
+    return false
   }
 
   if (typeof a === 'object') {
-    return !Object.keys(b).some(key => !deepIncludes(a[key], b[key]));
+    return !Object.keys(b).some(key => !deepIncludes(a[key], b[key]))
   }
 
-  return a === b;
+  return a === b
 }
 
 export function isDocumentVisible() {
@@ -80,61 +74,58 @@ export function isDocumentVisible() {
     document.visibilityState === undefined ||
     document.visibilityState === 'visible' ||
     document.visibilityState === 'prerender'
-  );
+  )
 }
 
 export function isOnline() {
-  return navigator.onLine === undefined || navigator.onLine;
+  return navigator.onLine === undefined || navigator.onLine
 }
 
 export function getQueryArgs(args) {
   if (isObject(args[0])) {
-    if (args[0].hasOwnProperty('queryKey') && args[0].hasOwnProperty('queryFn')) {
-      const { queryKey, variables = [], queryFn, config = {} } = args[0];
-      return [queryKey, variables, queryFn, config];
+    if (
+      args[0].hasOwnProperty('queryKey') &&
+      args[0].hasOwnProperty('queryFn')
+    ) {
+      const { queryKey, variables = [], queryFn, config = {} } = args[0]
+      return [queryKey, variables, queryFn, config]
     } else {
-      throw new Error('queryKey and queryFn keys are required.');
+      throw new Error('queryKey and queryFn keys are required.')
     }
   }
   if (typeof args[2] === 'function') {
-    const [queryKey, variables = [], queryFn, config = {}] = args;
-    return [queryKey, variables, queryFn, config];
+    const [queryKey, variables = [], queryFn, config = {}] = args
+    return [queryKey, variables, queryFn, config]
   }
 
-  const [queryKey, queryFn, config = {}] = args;
+  const [queryKey, queryFn, config = {}] = args
 
-  return [queryKey, [], queryFn, config];
+  return [queryKey, [], queryFn, config]
 }
 
-export const getReturnState = queryState => {
-  return {
-    ...queryState,
-    isLoading: queryState.status === 'loading',
-    hasError: queryState.status === 'error',
-    isSuccess: queryState.status === 'success'
-  };
-};
-
 export function useMountedCallback(callback) {
-  const mounted = React.useRef(false);
+  const mounted = React.useRef(false)
   React[isServer ? 'useEffect' : 'useLayoutEffect'](() => {
-    mounted.current = true;
-    return () => (mounted.current = false);
-  }, []);
-  return React.useCallback((...args) => (mounted.current ? callback(...args) : void 0), [callback]);
+    mounted.current = true
+    return () => (mounted.current = false)
+  }, [])
+  return React.useCallback(
+    (...args) => (mounted.current ? callback(...args) : void 0),
+    [callback]
+  )
 }
 
 export function handleSuspense(query) {
   if (query.config.suspense || query.config.useErrorBoundary) {
-    if (query.status === statusError) {
-      throw query.error;
+    if (query.status === STATUS.ERROR) {
+      throw query.error
     }
   }
 
   if (query.config.suspense) {
-    if (query.status === statusLoading) {
-      query.wasSuspensed = true;
-      throw query.refetch();
+    if (query.status === STATUS.LOADING) {
+      query.wasSuspensed = true
+      throw query.refetch()
     }
   }
 }

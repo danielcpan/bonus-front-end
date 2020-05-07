@@ -3,20 +3,11 @@ import React from 'react'
 //
 
 import { useConfigContext } from './config'
-import {
-  statusIdle,
-  statusLoading,
-  statusSuccess,
-  statusError,
-  useGetLatest,
-  Console,
-  uid,
-  useMountedCallback,
-  noop,
-} from './utils'
+import { useGetLatest, Console, uid, useMountedCallback, noop } from './utils'
+import { STATUS } from './types'
 
 const getDefaultState = () => ({
-  status: statusIdle,
+  status: STATUS.IDLE,
   data: undefined,
   error: null,
 })
@@ -32,18 +23,18 @@ function mutationReducer(state, action) {
   }
   if (action.type === actionLoading) {
     return {
-      status: statusLoading,
+      status: STATUS.LOADING,
     }
   }
   if (action.type === actionResolve) {
     return {
-      status: statusSuccess,
+      status: STATUS.SUCCESS,
       data: action.data,
     }
   }
   if (action.type === actionReject) {
     return {
-      status: statusError,
+      status: STATUS.ERROR,
       error: action.error,
     }
   }
