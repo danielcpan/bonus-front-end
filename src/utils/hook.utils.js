@@ -17,7 +17,7 @@ export const defaultConfigRef = {
 };
 
 export const getIsLoading = (hooks = []) => {
-  return hooks.some(el => el.isLoading);
+  return hooks.some(el => el.status === 'loading');
 };
 
 export const getHasError = (hooks = []) => {

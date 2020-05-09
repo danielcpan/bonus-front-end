@@ -16,7 +16,6 @@ export const defaultConfigRef = {
     queryFnParamsFilter: identity,
     throwOnError: false,
     useErrorBoundary: undefined, // this will default to the suspense value
-    skip: false,
     onMutate: noop,
     onSuccess: noop,
     onError: noop,

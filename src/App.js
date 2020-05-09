@@ -6,10 +6,38 @@ import PostsView from './views/Posts.view';
 import CommentsView from './views/Comments.view';
 import { queryCache } from './react-query';
 
-queryCache.entities = {
-  comments: {},
-  posts: {}
+import { normalize, schema } from 'normalizr';
+// const { normalize, schema } = require('normalizr');
+
+const user = new schema.Entity('users');
+const users = [user];
+const comment = new schema.Entity('comments');
+const comments = [comment];
+const post = new schema.Entity('post', {
+  author: user,
+  comments: [comment]
+});
+const posts = [post];
+
+queryCache.schemas = {
+  user,
+  users,
+  comment,
+  comments,
+  post,
+  posts
 };
+
+queryCache.entities = Object.keys(queryCache.schemas).reduce(
+  (acc, el) => ({
+    ...acc,
+    [el]: {}
+  }),
+  {}
+);
+// queryCache.entities = {
+//   // Object.keys(queryCache.schemas).map(el => )
+// }
 
 const queryConfig = {
   // Global
@@ -19,7 +47,6 @@ const queryConfig = {
   refetchAllOnWindowFocusTimeDelay: 1000 * 10,
   refetchAllOnWindowFocus: true,
   // queryKeySerializerFn: queryKey => [queryHash, queryFnArgs],
-  skip: false,
   onMutate: () => {},
   onSuccess: () => {},
   onError: () => {},

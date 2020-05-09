@@ -6,6 +6,14 @@ import { queryCache } from './queryCache';
 import { useConfigContext } from './config';
 import { useUid, isDocumentVisible, Console, useGetLatest, useMountedCallback } from './utils';
 
+function isEmpty(obj) {
+  for (var prop in obj) {
+    if (obj.hasOwnProperty(prop)) return false;
+  }
+
+  return true;
+}
+
 export function useBaseQuery(queryKey, queryVariables, queryFn, config = {}) {
   const instanceId = useUid();
 
@@ -39,7 +47,6 @@ export function useBaseQuery(queryKey, queryVariables, queryFn, config = {}) {
   const refetch = React.useCallback(
     async ({ throwOnError, ...rest } = {}) => {
       try {
-        console.log('rest:', rest);
         return await query.fetch(rest);
       } catch (err) {
         if (throwOnError) {
@@ -49,6 +56,14 @@ export function useBaseQuery(queryKey, queryVariables, queryFn, config = {}) {
     },
     [query]
   );
+
+  const getData = React.useCallback(() => {
+    const entityKey = query.queryKey[0];
+
+    if (!query.state.ids || Object.keys(queryCache.entities[entityKey]).length === 0) return;
+    const data = query.state.ids.map(el => queryCache.entities[entityKey][el]);
+    return data;
+  }, [query.queryKey, query.state]);
 
   // Subscribe to the query and maybe trigger fetch
   React.useEffect(() => {
@@ -102,5 +117,6 @@ export function useBaseQuery(queryKey, queryVariables, queryFn, config = {}) {
     config,
     // query,
     refetch
+    // data: getData()
   };
 }

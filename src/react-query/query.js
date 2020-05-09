@@ -3,6 +3,7 @@ import { queryCache, notifyGlobalListeners } from './queryCache';
 
 import { STATUS, QUERY } from './types';
 import defaultQueryReducer from './defaultQueryReducer';
+import { normalize } from 'normalizr';
 
 export function makeQuery(options) {
   const reducer = options.config.queryReducer || defaultQueryReducer;
@@ -11,7 +12,7 @@ export function makeQuery(options) {
 
   const initialData =
     typeof options.config.initialData === 'function'
-      ? options.config.initialData()
+      ? options.config.initialData(options)
       : options.config.initialData;
 
   const hasInitialData = typeof initialData !== 'undefined';
@@ -169,23 +170,8 @@ export function makeQuery(options) {
     }
   };
 
-  const shouldSkip = skip => {
-    if (typeof skip === 'function') {
-      try {
-        return Boolean(skip());
-      } catch (err) {
-        return false;
-      }
-    }
-    return skip;
-  };
-
-  query.fetch = async ({ skip, force, __queryFn = query.queryFn } = {}) => {
+  query.fetch = async ({ force, __queryFn = query.queryFn } = {}) => {
     // Don't refetch fresh queries that don't have a queryHash
-    console.log('skip:', skip);
-    const isSkip = shouldSkip(skip);
-    console.log('isSkip:', isSkip);
-
     if (!query.queryHash || (!query.state.isStale && !force)) return;
 
     // Create a new promise for the query cache if necessary
@@ -199,9 +185,27 @@ export function makeQuery(options) {
           dispatch({ type: QUERY.FETCH });
 
           // Try to fetch
-          let data = await tryFetchData(__queryFn, ...query.queryKey, ...query.queryVariables);
+          const data = await tryFetchData(__queryFn, ...query.queryKey, ...query.queryVariables);
+          // console.log('data:', data);
 
-          query.setData(data);
+          const entityKey = query.queryKey[0];
+          const schema = queryCache.schemas[entityKey];
+          // console.log('entityKey:', entityKey, 'schema:', schema);
+
+          const normalizedData = normalize(data, queryCache.schemas[entityKey]);
+          // console.log('normalizedData:', normalizedData);
+
+          // query.setData(data);
+          // const data2 = query.state.ids.map(el => queryCache.entities[entityKey][el]);
+          // console.log("data:")
+
+          queryCache.entities[entityKey] = {
+            ...queryCache.entities[entityKey],
+            ...normalizedData.entities[entityKey]
+          };
+
+          // const data2 = normalizedData.result.map(el => queryCache.entities[entityKey][el]);
+          query.setData2(data, normalizedData.result);
 
           query.instances.forEach(
             instance => instance.onSuccess && instance.onSuccess(query.state.data)
@@ -244,6 +248,15 @@ export function makeQuery(options) {
   query.setData = updater => {
     // Set data and mark it as cached
     dispatch({ type: QUERY.SUCCESS, updater });
+
+    // Schedule a fresh invalidation!
+    clearTimeout(query.staleTimeout);
+    query.scheduleStaleTimeout();
+  };
+
+  query.setData2 = (updater, ids) => {
+    // Set data and mark it as cached
+    dispatch({ type: QUERY.SUCCESS, updater, ids });
 
     // Schedule a fresh invalidation!
     clearTimeout(query.staleTimeout);

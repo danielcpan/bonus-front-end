@@ -1,5 +1,5 @@
-import { functionalUpdate } from './utils'
-import { STATUS, QUERY } from './types'
+import { functionalUpdate } from './utils';
+import { STATUS, QUERY } from './types';
 
 const defaultQueryReducer = (state, action) => {
   switch (action.type) {
@@ -8,51 +8,50 @@ const defaultQueryReducer = (state, action) => {
         status: action.initialStatus,
         error: null,
         isFetching:
-          action.hasInitialData || action.manual
-            ? false
-            : action.initialStatus === 'loading',
+          action.hasInitialData || action.manual ? false : action.initialStatus === 'loading',
         canFetchMore: false,
         failureCount: 0,
         isStale: action.isStale,
         markedForGarbageCollection: false,
         data: action.initialData,
-        updatedAt: action.hasInitialData ? Date.now() : 0,
-      }
+        updatedAt: action.hasInitialData ? Date.now() : 0
+      };
     case QUERY.FAILURE:
       return {
         ...state,
-        failureCount: state.failureCount + 1,
-      }
+        failureCount: state.failureCount + 1
+      };
     case QUERY.STALE:
       return {
         ...state,
-        isStale: true,
-      }
+        isStale: true
+      };
     case QUERY.EXPIRED: {
       return {
         ...state,
-        markedForGarbageCollection: true,
-      }
+        markedForGarbageCollection: true
+      };
     }
     case QUERY.FETCH:
       return {
         ...state,
         status: state.status === STATUS.ERROR ? STATUS.LOADING : state.status,
         isFetching: true,
-        failureCount: 0,
-      }
+        failureCount: 0
+      };
     case QUERY.SUCCESS:
       return {
         ...state,
         status: STATUS.SUCCESS,
         data: functionalUpdate(action.updater, state.data),
+        ids: action.ids,
         error: null,
         isStale: false,
         isFetching: false,
         canFetchMore: action.canFetchMore,
         updatedAt: Date.now(),
-        failureCount: 0,
-      }
+        failureCount: 0
+      };
     case QUERY.ERROR:
       return {
         ...state,
@@ -60,13 +59,13 @@ const defaultQueryReducer = (state, action) => {
         isStale: true,
         ...(!action.cancelled && {
           status: STATUS.ERROR,
-          error: action.error,
-        }),
-      }
+          error: action.error
+        })
+      };
     case QUERY.SET_STATE:
-      return functionalUpdate(action.updater, state)
+      return functionalUpdate(action.updater, state);
     default:
-      throw new Error()
+      throw new Error();
   }
-}
-export default defaultQueryReducer
+};
+export default defaultQueryReducer;
